@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ app_name }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand"><span class="brand-mark">R</span><div><span class="eyebrow">PYTHON WEB</span><h1>{{ app_name }}</h1></div></div>
+    <nav class="page-tabs" aria-label="Chức năng">
+      <button class="page-tab active" data-page="audio-page"><span>01</span>Tách Audio</button>
+      <button class="page-tab" data-page="image-page"><span>02</span>Tạo Ảnh</button>
+    </nav>
+    <span id="connection" class="pill">Đang kết nối</span>
+  </header>
+
+  <main id="audio-page" class="page active">
+    <div class="page-heading"><div><span class="section-kicker">CHỨC NĂNG 01</span><h2>Tách Audio</h2><p>Tách audio theo mốc SRT, ghép đoạn theo giới hạn từ và xuất MP3 tự động.</p></div><span id="audio-running-badge" class="state-badge">SẴN SÀNG</span></div>
+
+    <section class="panel full-width">
+      <div class="panel-title"><div><h3>Đầu vào và đầu ra</h3><p>Chọn ba file nguồn trên máy tính</p></div></div>
+      <div class="file-grid">
+        <label for="audio-txt">File TXT nội dung</label><input id="audio-txt" type="text" placeholder="Chọn file nội dung .txt" readonly><button class="pick-file" data-kind="txt" data-target="audio-txt">Chọn</button>
+        <label for="audio-srt">File SRT mốc thời gian</label><input id="audio-srt" type="text" placeholder="Chọn file phụ đề .srt" readonly><button class="pick-file" data-kind="srt" data-target="audio-srt">Chọn</button>
+        <label for="audio-media">File Audio / Video</label><input id="audio-media" type="text" placeholder="Chọn file audio hoặc video" readonly><button class="pick-file" data-kind="media" data-target="audio-media">Chọn</button>
+        <label for="project-name">Tên dự án</label><input id="project-name" type="text" placeholder="Ví dụ: Video_truyen_01"><button id="auto-project-name">Tự đặt</button>
+        <label for="project-parent">Nơi xuất dự án</label><input id="project-parent" type="text" placeholder="Mặc định: cạnh file Audio/Video" readonly><button class="pick-file" data-kind="folder" data-target="project-parent">Chọn</button>
+      </div>
+      <div class="output-row"><div><span>Thư mục dự án chung</span><strong id="audio-output">Sẽ gồm: 01_AUDIO · 02_IMAGE · prompts.json</strong></div></div>
+    </section>
+
+    <section class="panel full-width">
+      <div class="panel-title"><div><h3>Thiết lập tách audio</h3><p>Điều chỉnh cách gộp các mốc phụ đề</p></div></div>
+      <div class="setting-cards">
+        <div class="setting-card"><div><label for="max-words">Giới hạn từ / đoạn</label><p>Các mốc liền nhau được gộp đến giới hạn này</p></div><div class="inline-control"><input id="limit-enabled" type="checkbox" checked><input id="max-words" type="number" min="1" max="500" value="18"><span>từ</span></div></div>
+        <div class="setting-card"><div><label for="audio-language">Ngôn ngữ</label><p>Dùng để ghi nhận cấu hình nội dung</p></div><select id="audio-language"><option value="vi">Vietnamese (vi)</option><option value="en">English (en)</option><option value="auto">Tự động</option></select></div>
+      </div>
+    </section>
+
+    <section class="panel full-width action-panel">
+      <div><span class="section-kicker">XỬ LÝ</span><h3>Tạo audio</h3><p id="audio-status">Trạng thái: Chờ tách audio</p></div>
+      <div class="audio-actions"><button id="start-audio" class="gold">Tạo Audio</button><button id="stop-audio" class="danger">Dừng</button><button id="open-audio-folder">Mở Folder</button></div>
+      <div class="progress-track"><div id="audio-progress-bar"></div></div>
+      <div id="audio-warning" class="warning" hidden></div>
+    </section>
+
+    <section class="panel full-width">
+      <div class="panel-title"><div><h3>Kết quả tách audio</h3><p id="audio-count">Chưa có kết quả</p></div></div>
+      <div class="table-wrap"><table><thead><tr><th>STT</th><th>Thời gian</th><th>Nội dung đoạn</th><th>File audio xuất ra</th><th>Trạng thái</th></tr></thead><tbody id="audio-results"><tr><td colspan="5" class="empty-cell">Kết quả sẽ xuất hiện tại đây khi bắt đầu xử lý.</td></tr></tbody></table></div>
+    </section>
+  </main>
+
+  <main id="image-page" class="page">
+    <div class="page-heading"><div><span class="section-kicker">CHỨC NĂNG 02</span><h2>Tạo Ảnh Flow</h2><p>Quản lý account, hàng đợi prompt và vòng xoay dự phòng.</p></div></div>
+    <section class="panel accounts-panel">
+      <div class="panel-title"><div><h3>Google Flow Multi-Account</h3><p>Mỗi account dùng một profile trình duyệt riêng biệt</p></div><div class="account-head-actions"><button id="open-diagnostics">Mở chẩn đoán</button><button id="refresh-all">Refresh All</button><button id="add-account">+ Thêm account</button></div></div>
+      <div class="scheduler-settings">
+        <label>Số luồng chạy <input id="active-threads" type="number" min="1" step="1" value="5" title="Không giới hạn cứng; số luồng thực tế tối đa bằng số account READY"></label>
+        <label>Model Flow <select id="flow-model"><option value="auto">Tự động</option><option value="nano-banana-2-lite">Nano Banana 2 Lite</option><option value="nano-banana-2">Nano Banana 2</option><option value="nano-banana-pro">Nano Banana Pro</option></select></label>
+        <label>Tỷ lệ ảnh <select id="aspect-ratio"><option value="auto">Tự động</option><option value="16:9">16:9</option><option value="4:3">4:3</option><option value="1:1">1:1</option><option value="3:4">3:4</option><option value="9:16">9:16</option></select></label>
+        <label>Ảnh mỗi prompt <select id="images-per-prompt"><option value="1">1 ảnh</option><option value="2">2 ảnh</option><option value="3">3 ảnh</option><option value="4">4 ảnh</option></select></label>
+        <label>Chế độ trình duyệt <select id="browser-run-mode"><option value="hidden_desktop">Ẩn nền hoàn toàn</option><option value="minimized_taskbar">Thu nhỏ trên Taskbar</option></select></label>
+        <label>Giãn cách Generate (giây) <input id="submit-gap" type="text" inputmode="decimal" value="5" placeholder="5 hoặc 5-8" title="Tối thiểu 5 giây. Nhập 5 để cố định 5 giây; nhập 5-8 để chọn ngẫu nhiên từ 5 đến 8 giây"></label>
+        <button id="save-settings">Lưu cấu hình</button><span id="pool-summary" class="detail"></span>
+      </div>
+      <div class="total-image-progress"><div><span>TỔNG TIẾN TRÌNH TẠO ẢNH</span><div class="image-progress-stats"><strong id="account-image-progress">0/0 ảnh</strong><span id="image-elapsed-time">Thời gian 00:00:00</span></div></div><div class="total-image-progress-track"><div id="account-image-progress-bar"></div></div></div>
+      <div id="accounts" class="accounts"></div>
+    </section>
+    <section class="panel styles-panel">
+      <div class="panel-title"><div><h3>Style hình ảnh</h3><p>Lưu nhiều style và chọn style gửi nguyên văn sang Flow</p></div><button id="new-style">+ Style mới</button></div>
+      <input id="style-id" type="hidden" value="">
+      <div class="style-editor">
+        <label for="style-name">Tên style</label>
+        <input id="style-name" type="text" placeholder="Ví dụ: Hoạt hình 3D">
+        <label for="style-content">Nội dung style</label>
+        <textarea id="style-content" placeholder="Nhập chính xác nội dung style muốn nối vào prompt..."></textarea>
+        <div class="style-editor-actions"><button id="save-style" class="primary">Lưu Style mới</button><span id="style-edit-mode" class="detail">Đang tạo style mới</span></div>
+      </div>
+      <div class="style-library-head"><span>STYLE ĐÃ LƯU</span><strong id="style-count">0 style</strong></div>
+      <div id="style-list" class="style-list"><div class="detail">Chưa có style nào.</div></div>
+    </section>
+    <section class="panel composer full-width">
+      <div class="panel-title"><div><h3>Prompt Ring</h3><p>Mỗi dòng là một tác vụ tạo ảnh</p></div></div>
+      <div class="project-strip"><div><span>DỰ ÁN ĐANG DÙNG</span><strong id="active-project-name">Chưa nạp dự án</strong><small id="active-project-path">Hãy tạo audio ở trang 1 hoặc nạp prompts.json.</small></div><button id="load-project">Nạp dự án Prompt</button><button id="export-video" class="gold">Xuất Video</button></div>
+      <div class="active-style-row"><span>Style đang dùng</span><select id="active-style"><option value="0">Không dùng style</option></select><small>Nội dung style được nối nguyên văn vào cuối mỗi prompt.</small></div>
+      <textarea id="prompts" hidden aria-hidden="true"></textarea>
+      <div class="toolbar"><button id="load">Tạo Prompt</button><button id="start" class="primary">Bắt đầu tạo ảnh</button><button id="stop" class="danger">Dừng job</button></div>
+    </section>
+    <section class="panel jobs-panel">
+      <div class="panel-title"><div><h3>Hàng đợi</h3><p id="progress">0 tác vụ</p></div></div>
+      <div class="table-wrap"><table><thead><tr><th>#</th><th>Prompt</th><th>Account</th><th>Trạng thái</th><th>Chi tiết</th></tr></thead><tbody id="jobs"></tbody></table></div>
+    </section>
+    <section class="panel log-panel">
+      <div class="panel-title"><div><h3>Nhật ký</h3><p>Hoạt động gần nhất của backend</p></div></div><pre id="logs"></pre>
+    </section>
+  </main>
+  <dialog id="account-editor" class="account-editor">
+    <form method="dialog">
+      <div class="modal-head"><div><span class="section-kicker">FLOW ACCOUNT</span><h3 id="account-editor-title">Thêm account</h3></div><button value="cancel" class="modal-close" aria-label="Đóng">×</button></div>
+      <input id="edit-account-id" type="hidden">
+      <label>Nhãn account<input id="edit-account-label" type="text" maxlength="80" placeholder="Ví dụ: Gmail chính, Account 01"></label>
+      <label>Email Google<input id="edit-account-email" type="email" placeholder="Có thể để trống; tool sẽ tự nhận diện sau đăng nhập"></label>
+      <label>Trình duyệt<select id="edit-account-browser"></select></label>
+      <label>Proxy riêng<input id="edit-account-proxy" type="text" autocomplete="off" spellcheck="false" placeholder="host:port hoặc http://user:pass@host:port"></label>
+      <p class="modal-note">Mỗi account có profile, phiên đăng nhập và proxy độc lập. Hỗ trợ HTTP, HTTPS, SOCKS4, SOCKS5 và proxy có tài khoản/mật khẩu.</p>
+      <div class="modal-actions"><button value="cancel">Hủy</button><button id="save-account-edit" type="button">Lưu</button><button id="save-account-open" type="button" class="primary">Lưu + Mở đăng nhập</button></div>
+    </form>
+  </dialog>
+  <div id="toast" role="status"></div>
+  <script src="{{ url_for('static', filename='app.js', v='20261023-browser-run-modes') }}"></script>
+</body>
+</html>

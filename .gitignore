@@ -1,0 +1,55 @@
+*.log
+.DS_Store
+Thumbs.db
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local developer/editor state
+.cursor/
+.vscode/
+.idea/
+.env
+.env.*
+!.env.example
+
+# Private account and browser state
+accounts.json
+styles.json
+config.local.json
+cookies*.json
+credentials*.json
+secrets*.json
+browser_profile*/
+profiles/
+user_data/
+playwright/.auth/
+*.har
+
+# User-generated projects, media, and diagnostics
+results/
+audio_results/
+diagnostics/
+outputs/
+projects/
+01_AUDIO/
+02_IMAGE/
+prompts.json
+video_final.mp4
+
+# Local databases, keys, and distributable build artifacts
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.pem
+*.key
+*.p12
+*.pfx
+build/
+dist/
+*.exe
+*.zip
+*.7z
+*.rar
